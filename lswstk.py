@@ -1,121 +1,71 @@
-import threading
 import os
-import time
 
-def subprocess(fd_in,fd_out,fd_error,ip,lock) :
-    print('subprocess(fd_in:%d,fd_out:%d,fd_error:%d,ip:"%s")'%(fd_in,fd_out,fd_error,ip))
-    pid = os.fork()
-    if pid < 0 :
-        print('Fork failure %s'%(ip))
-        lock.acquire()
-        states[ip] = 3
-        lock.release()
-        return
-    if 0 == pid :
-        os.dup2(fd_in,0)
-        os.close(fd_in)
-        os.dup2(fd_out,1)
-        os.close(fd_out)
-        os.dup2(fd_error,2)
-        os.close(fd_error)
-        os.execvp("commander",["commander","adapter","probe","--ip",ip])
-    else :
-        (epid, status) = os.waitpid(pid, 0)
-        if epid == pid :
-            print('%s commander exited'%(ip),status)
-            lock.acquire()
-            if status :
-                states[ip] = 3
-            else :
-                states[ip] = 2
-            lock.release()
-            return
-
-def preader(fd,ip,lock) :
-    global active
-    print('reader(fd:%d,ip:"%s"): pid:%d'%(fd,ip,os.getpid()))
-    text = b''
-    os.set_blocking(fd,False)
-    while True :
-        lock.acquire()
-        state = states[ip]
-        if 2 == state :
-            results[ip] = text
-            states.pop(ip)
-        if 3 == state :
-            states.pop(ip)
-        lock.release()
-        if state > 1 :
-            print('reader exiting ip:%s, state:%d'%(ip,state))
-            return
-        try :
-            byte = os.read(fd,1)
-            text += byte
-        except :
-            time.sleep(.01)
-    
-def process(ip,lock) :
-    global states
-    lock.acquire()
-    states[ip] = 1
-    lock.release()    
-    print('process("%s")'%(ip))
-    (read_in,write_in) = os.pipe()
-    (read_out,write_out) = os.pipe()
-    (read_error,write_error) = os.pipe()
-    p = threading.Thread(target=subprocess,args=(read_in,write_out,write_error,ip,lock))
-    r = threading.Thread(target=preader,args=(read_out,ip,lock))
-    print('starting reader %s'%(ip))
-    r.start()
-    print('starting subprocess')
-    p.start()
-    p.join()
-    print('process exiting')
-
-states = {}
-results = {}
-lock = threading.Lock()
-for a in range(15,60) :
-    ip = "192.168.0.%d"%(a)
-    p = threading.Thread(target=process,args=(ip,lock))
-    lock.acquire()
-    states[ip] = 0
-    count = len(states)
-    lock.release()
-    p.start()
-    if count > 15 :
-        time.sleep(1)
-    else :
-        time.sleep(.1)
-
-while True :
-    lock.acquire()
-    count = len(states)
-    lock.release()
-    if 0 == count :
-        break
-    time.sleep(1)
-
-for ip in results :
-    lines = results[ip].decode().split('\n')
-    name = 'unknown'
-    part = 'unknown'
+def get_dict(command,serial) :
+    fh = os.popen('commander %s -s %s'%(command,serial))
+    text = fh.read()
+    fh.close()
+    lines = text.split('\n')
+    rd = {}
     for line in lines :
-        tokens = line.split()
-        if 4 == len(tokens) \
-           and 'J-Link' == tokens[0] \
-           and 'Serial' == tokens[1] \
-           and ':' == tokens[2] :
-            serial = tokens[3]
-        if len(tokens) > 2 \
-           and 'Name' == tokens[0] \
-           and ':' == tokens[1] :
-            name = tokens[2]
-        if len(tokens) > 3 \
-           and 'Part' == tokens[0] \
-           and 'Number' == tokens[1] \
-           and ':' == tokens[2] :
-            part = ' '.join(tokens[3:])
-    print('%s %s %s %s'%(ip,serial,name,part))
-    if 'unknown' == name :
-        print(results[ip])
+        if '' == line : continue
+        tokens = line.split(':')
+        if len(tokens) < 2 : continue
+        if 'ERROR' == tokens[0] : return text
+        if 'WARNING' == tokens[0] : return text
+        key = tokens[0].strip()
+        value = tokens[1].strip()
+        cvalue = rd.get(key)
+        if None == cvalue :
+            rd[key] = value
+        elif list == type(cvalue) :
+            rd[key].append(value)
+        else :
+            rd[key] = [cvalue,value]
+    return rd
+
+PREFIX = 'usb-Silicon_Labs_J-Link'
+files = os.listdir('/dev/serial/by-id')
+output = [['Serial','Boards','Device / Debug mode','SRAM']]
+for file in files :
+    if PREFIX != file[:len(PREFIX)] : continue
+    left = file.index('_OB_')+4
+    right = file.index('-if',left)
+    serialNumber = file[left:right].lstrip('0')
+    lineOutput = [serialNumber]
+    boardInfo = get_dict('adapter probe',serialNumber)
+    if dict != type(boardInfo) :
+        print(boardInfo)
+        quit()
+    debugMode = boardInfo['Debug Mode']
+    boards = boardInfo['Part Number']
+    if list != type(boards) :
+        boards = [boards]
+    tl = []
+    for b in boards :
+        tl.append(b.split()[0])
+    lineOutput.append(','.join(tl))
+    if 'MCU' == debugMode :
+        deviceInfo = get_dict('device info',serialNumber)
+        if dict != type(deviceInfo) :
+            print(deviceInfo)
+            quit()
+        lineOutput.append(deviceInfo['Part Number'])
+        lineOutput.append(deviceInfo['SRAM Size'])
+    else :
+        lineOutput.append(debugMode)
+        lineOutput.append('')
+    output.append(lineOutput)
+
+fmt = ''
+for col in range(len(output[0])) :
+    max = 0
+    for row in range(len(output)) :
+        l = len(output[row][col])
+        if l > max : max = l
+    fmt += '%%-%ds'%(max+1)
+
+for row in range(len(output)) :
+    c = ()
+    for col in range(len(output[row])) :
+        c += (output[row][col],)
+    print(fmt%c)
