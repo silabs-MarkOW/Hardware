@@ -23,9 +23,16 @@ def get_dict(command,serial) :
             rd[key] = [cvalue,value]
     return rd
 
+def eui64_to_address(euid64) :
+    octets = []
+    for i in range(8) :
+        if i < 3 or i > 4 :
+            octets.append(euid64[2*i:][:2])
+    return':'.join(octets)
+
 PREFIX = 'usb-Silicon_Labs_J-Link'
 files = os.listdir('/dev/serial/by-id')
-output = [['Serial','Boards','Device / Debug mode','SRAM']]
+output = [['Serial','Boards','VCOM','Device / Debug mode','SRAM','BT address']]
 for file in files :
     if PREFIX != file[:len(PREFIX)] : continue
     left = file.index('_OB_')+4
@@ -42,8 +49,9 @@ for file in files :
         boards = [boards]
     tl = []
     for b in boards :
-        tl.append(b.split()[0])
+        tl.append(b.split()[0][3:])
     lineOutput.append(','.join(tl))
+    lineOutput.append(boardInfo['VCOM Port'])
     if 'MCU' == debugMode :
         deviceInfo = get_dict('device info',serialNumber)
         if dict != type(deviceInfo) :
@@ -51,8 +59,10 @@ for file in files :
             quit()
         lineOutput.append(deviceInfo['Part Number'])
         lineOutput.append(deviceInfo['SRAM Size'])
+        lineOutput.append(eui64_to_address(deviceInfo['Unique ID']))
     else :
         lineOutput.append(debugMode)
+        lineOutput.append('')
         lineOutput.append('')
     output.append(lineOutput)
 
