@@ -52,7 +52,7 @@ for file in files :
         tl.append(b.split()[0][3:])
     lineOutput.append(','.join(tl))
     lineOutput.append(boardInfo['VCOM Port'])
-    if 'MCU' == debugMode :
+    if 'MCU' == debugMode or 'TARGET' == debugMode :
         deviceInfo = get_dict('device info',serialNumber)
         if dict != type(deviceInfo) :
             print(deviceInfo)
