@@ -107,8 +107,11 @@ for serialNumber in boardInfos :
         if dict != type(deviceInfo) :
             print(deviceInfo)
             quit()
-        lineOutput.append(deviceInfo['Part Number'])
-        lineOutput.append(deviceInfo['SRAM Size'])
+        part = deviceInfo['Part Number']
+        if 'EFR32' == part[:5] :
+            part = part[5:]
+        lineOutput.append(part)
+        lineOutput.append(deviceInfo['SRAM Size'].split()[0])
         lineOutput.append(eui64_to_address(deviceInfo['Unique ID']))
     else :
         lineOutput.append(debugMode)
