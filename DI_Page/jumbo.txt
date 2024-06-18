@@ -1,0 +1,83 @@
+Offset Name Type Description
+0x000 CAL RO CRC of DI-page and calibration temperature
+0x004 MODULEINFO RO Module trace information
+0x008 MODXOCAL RO Module Crystal Oscillator Calibration
+0x020 EXTINFO RO External Component description
+0x028 EUI48L RO EUI48 OUI and Unique identifier
+0x02C EUI48H RO OUI
+0x030 CUSTOMINFO RO Custom information
+0x034 MEMINFO RO Flash page size and misc. chip information
+0x040 UNIQUEL RO Low 32 bits of device unique number
+0x044 UNIQUEH RO High 32 bits of device unique number
+0x048 MSIZE RO Flash and SRAM Memory size in kB
+0x04C PART RO Part description
+0x050 DEVINFOREV RO Device information page revision
+0x054 EMUTEMP RO EMU Temperature Calibration Information
+0x060 ADC0CAL0 RO ADC0 calibration register 0
+0x064 ADC0CAL1 RO ADC0 calibration register 1
+0x068 ADC0CAL2 RO ADC0 calibration register 2
+0x06C ADC0CAL3 RO ADC0 calibration register 3
+0x080 HFRCOCAL0 RO HFRCO Calibration Register (4 MHz)
+0x08C HFRCOCAL3 RO HFRCO Calibration Register (7 MHz)
+0x098 HFRCOCAL6 RO HFRCO Calibration Register (13 MHz)
+0x09C HFRCOCAL7 RO HFRCO Calibration Register (16 MHz)
+0x0A0 HFRCOCAL8 RO HFRCO Calibration Register (19 MHz)
+0x0A8 HFRCOCAL10 RO HFRCO Calibration Register (26 MHz)
+0x0AC HFRCOCAL11 RO HFRCO Calibration Register (32 MHz)
+0x0B0 HFRCOCAL12 RO HFRCO Calibration Register (38 MHz)
+0x0E0 AUXHFRCOCAL0 RO AUXHFRCO Calibration Register (4 MHz)
+0x0EC AUXHFRCOCAL3 RO AUXHFRCO Calibration Register (7 MHz)
+0x0F8 AUXHFRCOCAL6 RO AUXHFRCO Calibration Register (13 MHz)
+0x0FC AUXHFRCOCAL7 RO AUXHFRCO Calibration Register (16 MHz)
+0x100 AUXHFRCOCAL8 RO AUXHFRCO Calibration Register (19 MHz)
+0x108 AUXHFRCOCAL10 RO AUXHFRCO Calibration Register (26 MHz)
+0x10C AUXHFRCOCAL11 RO AUXHFRCO Calibration Register (32 MHz)
+Reference Manual
+Memory and Bus System
+silabs.com | Building a more connected world. Rev. 1.3 | 59
+Offset Name Type Description
+0x110 AUXHFRCOCAL12 RO AUXHFRCO Calibration Register (38 MHz)
+0x140 VMONCAL0 RO VMON Calibration Register 0
+0x144 VMONCAL1 RO VMON Calibration Register 1
+0x148 VMONCAL2 RO VMON Calibration Register 2
+0x158 IDAC0CAL0 RO IDAC0 Calibration Register 0
+0x15C IDAC0CAL1 RO IDAC0 Calibration Register 1
+0x168 DCDCLNVCTRL0 RO DCDC Low-noise VREF Trim Register 0
+0x16C DCDCLPVCTRL0 RO DCDC Low-power VREF Trim Register 0
+0x170 DCDCLPVCTRL1 RO DCDC Low-power VREF Trim Register 1
+0x174 DCDCLPVCTRL2 RO DCDC Low-power VREF Trim Register 2
+0x178 DCDCLPVCTRL3 RO DCDC Low-power VREF Trim Register 3
+0x17C DCDCLPCMPHYSSEL0 RO DCDC LPCMPHYSSEL Trim Register 0
+0x180 DCDCLPCMPHYSSEL1 RO DCDC LPCMPHYSSEL Trim Register 1
+0x184 VDAC0MAINCAL RO VDAC0 Cals for Main Path
+0x188 VDAC0ALTCAL RO VDAC0 Cals for Alternate Path
+0x18C VDAC0CH1CAL RO VDAC0 CH1 Error Cal
+0x190 OPA0CAL0 RO OPA0 Calibration Register for DRIVESTRENGTH 0, INCBW=1
+0x194 OPA0CAL1 RO OPA0 Calibration Register for DRIVESTRENGTH 1, INCBW=1
+0x198 OPA0CAL2 RO OPA0 Calibration Register for DRIVESTRENGTH 2, INCBW=1
+0x19C OPA0CAL3 RO OPA0 Calibration Register for DRIVESTRENGTH 3, INCBW=1
+0x1A0 OPA1CAL0 RO OPA1 Calibration Register for DRIVESTRENGTH 0, INCBW=1
+0x1A4 OPA1CAL1 RO OPA1 Calibration Register for DRIVESTRENGTH 1, INCBW=1
+0x1A8 OPA1CAL2 RO OPA1 Calibration Register for DRIVESTRENGTH 2, INCBW=1
+0x1AC OPA1CAL3 RO OPA1 Calibration Register for DRIVESTRENGTH 3, INCBW=1
+0x1B0 OPA2CAL0 RO OPA2 Calibration Register for DRIVESTRENGTH 0, INCBW=1
+0x1B4 OPA2CAL1 RO OPA2 Calibration Register for DRIVESTRENGTH 1, INCBW=1
+0x1B8 OPA2CAL2 RO OPA2 Calibration Register for DRIVESTRENGTH 2, INCBW=1
+0x1BC OPA2CAL3 RO OPA2 Calibration Register for DRIVESTRENGTH 3, INCBW=1
+0x1C0 CSENGAINCAL RO Cap Sense Gain Adjustment
+0x1D0 OPA0CAL4 RO OPA0 Calibration Register for DRIVESTRENGTH 0, INCBW=0
+0x1D4 OPA0CAL5 RO OPA0 Calibration Register for DRIVESTRENGTH 1, INCBW=0
+0x1D8 OPA0CAL6 RO OPA0 Calibration Register for DRIVESTRENGTH 2, INCBW=0
+0x1DC OPA0CAL7 RO OPA0 Calibration Register for DRIVESTRENGTH 3, INCBW=0
+0x1E0 OPA1CAL4 RO OPA1 Calibration Register for DRIVESTRENGTH 0, INCBW=0
+0x1E4 OPA1CAL5 RO OPA1 Calibration Register for DRIVESTRENGTH 1, INCBW=0
+0x1E8 OPA1CAL6 RO OPA1 Calibration Register for DRIVESTRENGTH 2, INCBW=0
+0x1EC OPA1CAL7 RO OPA1 Calibration Register for DRIVESTRENGTH 3, INCBW=0
+Reference Manual
+Memory and Bus System
+silabs.com | Building a more connected world. Rev. 1.3 | 60
+Offset Name Type Description
+0x1F0 OPA2CAL4 RO OPA2 Calibration Register for DRIVESTRENGTH 0, INCBW=0
+0x1F4 OPA2CAL5 RO OPA2 Calibration Register for DRIVESTRENGTH 1, INCBW=0
+0x1F8 OPA2CAL6 RO OPA2 Calibration Register for DRIVESTRENGTH 2, INCBW=0
+0x1FC OPA2CAL7 RO OPA2 Calibration Register for DRIVESTRENGTH 3, INCBW=0
