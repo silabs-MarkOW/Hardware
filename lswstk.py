@@ -1,6 +1,7 @@
 import os
 import socket
 import time
+import threading
 
 def get_dict(command,sn=None,ip=None) :
     if None != sn :
@@ -43,8 +44,10 @@ def get_local(debug=True) :
     lines = text.split('\n')
     for line in lines :
         if len(line) < 14: continue
-        if 'serialNumber: ' != line[:14] : continue
-        serialNumbers.append(line[14:])
+        if 'serialNumber: ' == line[:14] :
+            serialNumbers.append(line[14:])
+        elif '  serialNumber=' == line[:15] :
+            serialNumbers.append(line[15:])
     return serialNumbers
 
 def get_remote(debug=True) :
@@ -71,18 +74,42 @@ def get_remote(debug=True) :
 
 output = [['Serial','Boards','VCOM','Device / Debug mode','SRAM','BT address']]
 boardInfos = {}
-for serialNumber in get_local() :
-    boardInfo = get_dict('adapter probe',sn=serialNumber)
-    if dict != type(boardInfo) : continue
-    boardInfos[serialNumber] = boardInfo
 
-for ip in get_remote() :
-    boardInfo = get_dict('adapter probe',ip=ip)
-    if dict != type(boardInfo) : continue
+def worker(genre,id) :
+    if 'serialnumber' == genre :
+        boardInfo = get_dict('adapter probe',sn=id)
+    elif 'ip' == genre :
+        boardInfo = get_dict('adapter probe',ip=id)
+    else :
+        raise RuntimeError(genre)
+    if dict != type(boardInfo) : return
     serialNumber = boardInfo['J-Link Serial']
-    boardInfo['IP'] = ip
+    if 'ip' == genre :
+        boardInfo['IP'] = id
+    debugMode = boardInfo['Debug Mode']
+    if 'MCU' == debugMode or 'TARGET' == debugMode :
+        if 'serialnumber' == genre :
+            deviceInfo = get_dict('device info',sn=id)
+        else :
+            deviceInfo = get_dict('device info',ip=id)
+        boardInfo['deviceInfo'] = deviceInfo
+    else :
+        boardInfo['deviceInfo'] = None
     boardInfos[serialNumber] = boardInfo
 
+threads = []
+for serialNumber in get_local() :
+    t = threading.Thread(target=worker,args=('serialnumber',serialNumber))
+    threads.append(t)
+    t.start()
+for ip in get_remote() :
+    t = threading.Thread(target=worker,args=('ip',ip))
+    threads.append(t)
+    t.start()
+time.sleep(1)
+for t in threads :
+    t.join()
+    
 for serialNumber in boardInfos :
     lineOutput = [serialNumber]
     boardInfo = boardInfos[serialNumber]
@@ -99,14 +126,11 @@ for serialNumber in boardInfos :
         lineOutput.append(boardInfo['VCOM Port'])
     else :
         lineOutput.append(boardInfo['IP'])
-    if 'MCU' == debugMode or 'TARGET' == debugMode :
-        if None == ip :
-            deviceInfo = get_dict('device info',sn=serialNumber)
-        else:
-            deviceInfo = get_dict('device info',ip=ip)
+    deviceInfo = boardInfo['deviceInfo']
+    if dict == type(deviceInfo) :
         if dict != type(deviceInfo) :
             print(deviceInfo)
-            quit()
+            deviceInfo = {'Part Number':'','SRAM Size':'x x','Unique ID':''}
         part = deviceInfo['Part Number']
         if 'EFR32' == part[:5] :
             part = part[5:]
