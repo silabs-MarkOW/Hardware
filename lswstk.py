@@ -102,11 +102,26 @@ for serialNumber in get_local() :
     t = threading.Thread(target=worker,args=('serialnumber',serialNumber))
     threads.append(t)
     t.start()
+    print('.',end='')
 for ip in get_remote() :
     t = threading.Thread(target=worker,args=('ip',ip))
     threads.append(t)
     t.start()
-time.sleep(1)
+    print('.',end='')
+while True :
+    print('\r',end='')
+    live = 0
+    for t in threads :
+        if t.is_alive() :
+            live += 1
+            print('o',end='')
+        else :
+            print(' ',end='')
+    if live == 0 :
+        break
+    time.sleep(0.01)
+print('\r',end='')
+    
 for t in threads :
     t.join()
     
