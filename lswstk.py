@@ -3,13 +3,18 @@ import socket
 import time
 import threading
 
-def get_dict(command,sn=None,ip=None) :
-    if None != sn :
-        fh = os.popen('commander %s -s %s'%(command,sn))
-    else :
-        fh = os.popen('commander %s --ip %s'%(command,ip))       
-    text = fh.read()
-    fh.close()
+#def get_dict(command,sn=None,ip=None,retries=1) :
+def get_dict(command,genre,id,retries=1) :
+    for attempt in range(retries) :
+        if 'serialnumber' == genre :
+            fh = os.popen('commander %s -s %s'%(command,id))
+        elif 'ip' == genre :
+            fh = os.popen('commander %s --ip %s'%(command,id))
+        else :
+            raise RuntimeError(genre)
+        text = fh.read()
+        fh.close()
+        if text.find('ERROR: Could not connect debugger') < 0 : break
     lines = text.split('\n')
     rd = {}
     for line in lines :
@@ -76,23 +81,21 @@ output = [['Serial','Boards','VCOM','Device / Debug mode','SRAM','BT address']]
 boardInfos = {}
 
 def worker(genre,id) :
-    if 'serialnumber' == genre :
-        boardInfo = get_dict('adapter probe',sn=id)
-    elif 'ip' == genre :
-        boardInfo = get_dict('adapter probe',ip=id)
-    else :
-        raise RuntimeError(genre)
+    boardInfo = get_dict('adapter probe',genre,id)
     if dict != type(boardInfo) : return
     serialNumber = boardInfo['J-Link Serial']
     if 'ip' == genre :
         boardInfo['IP'] = id
     debugMode = boardInfo['Debug Mode']
     if 'MCU' == debugMode or 'TARGET' == debugMode :
-        if 'serialnumber' == genre :
-            deviceInfo = get_dict('device info',sn=id)
-        else :
-            deviceInfo = get_dict('device info',ip=id)
+        deviceInfo = get_dict('device info',genre,id,retries=3)
         boardInfo['deviceInfo'] = deviceInfo
+        partno = deviceInfo.get('Part Number')
+        if str != type(partno) or partno.find('917') < 0 :
+            mfgInfo = None
+        else :
+            mfgInfo = get_dict('mfg917 info',genre,id,retries=3)
+        boardInfo['mfgInfo'] = mfgInfo
     else :
         boardInfo['deviceInfo'] = None
     boardInfos[serialNumber] = boardInfo
@@ -142,16 +145,34 @@ for serialNumber in boardInfos :
     else :
         lineOutput.append(boardInfo['IP'])
     deviceInfo = boardInfo['deviceInfo']
+    mfgInfo = boardInfo.get('mfgInfo')
     if dict == type(deviceInfo) :
         if dict != type(deviceInfo) :
             print(deviceInfo)
             deviceInfo = {'Part Number':'','SRAM Size':'x x','Unique ID':''}
         part = deviceInfo['Part Number']
-        if 'EFR32' == part[:5] :
+        isEFR32 = False
+        if 'EFR32' == part[:5] or 'BGM' == part[:3] or 'MGM' == part[:3] :
+            isEFR32 = True
             part = part[5:]
+            print(part,'isEFR32...',end='')
+        else :
+            print(part,'isNotEFR32...',end='')
         lineOutput.append(part)
         lineOutput.append(deviceInfo['SRAM Size'].split()[0])
-        lineOutput.append(eui64_to_address(deviceInfo['Unique ID']))
+        if isEFR32 :
+            print('isEFR32')
+            lineOutput.append(eui64_to_address(deviceInfo['Unique ID']))
+        elif dict == type(mfgInfo) :
+            bleAddr = mfgInfo.get('BLE MAC address')
+            print('isNotEFR32, bleAddr:',bleAddr)
+            if str == type(bleAddr) :
+                lineOutput.append(eui64_to_address(bleAddr[:6]+'0000'+bleAddr[6:]).lower())
+            else :
+                lineOutput.append('')
+        else :
+            print('isNotEFR, no mfgInfo')
+            lineOutput.append('')
     else :
         lineOutput.append(debugMode)
         lineOutput.append('')
