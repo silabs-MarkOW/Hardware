@@ -154,7 +154,8 @@ for serialNumber in boardInfos :
         isEFR32 = False
         if 'EFR32' == part[:5] or 'BGM' == part[:3] or 'MGM' == part[:3] :
             isEFR32 = True
-            part = part[5:]
+            if 'EFR32' == part[:5] :
+                part = part[5:]
         lineOutput.append(part)
         lineOutput.append(deviceInfo['SRAM Size'].split()[0])
         if isEFR32 :
