@@ -155,23 +155,18 @@ for serialNumber in boardInfos :
         if 'EFR32' == part[:5] or 'BGM' == part[:3] or 'MGM' == part[:3] :
             isEFR32 = True
             part = part[5:]
-            print(part,'isEFR32...',end='')
         else :
-            print(part,'isNotEFR32...',end='')
         lineOutput.append(part)
         lineOutput.append(deviceInfo['SRAM Size'].split()[0])
         if isEFR32 :
-            print('isEFR32')
             lineOutput.append(eui64_to_address(deviceInfo['Unique ID']))
         elif dict == type(mfgInfo) :
             bleAddr = mfgInfo.get('BLE MAC address')
-            print('isNotEFR32, bleAddr:',bleAddr)
             if str == type(bleAddr) :
                 lineOutput.append(eui64_to_address(bleAddr[:6]+'0000'+bleAddr[6:]).lower())
             else :
                 lineOutput.append('')
         else :
-            print('isNotEFR, no mfgInfo')
             lineOutput.append('')
     else :
         lineOutput.append(debugMode)
