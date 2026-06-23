@@ -10,6 +10,14 @@ def get_dict(command,genre,id,retries=1) :
             fh = os.popen('commander %s -s %s'%(command,id))
         elif 'ip' == genre :
             fh = os.popen('commander %s --ip %s'%(command,id))
+        elif 'nrf' == genre :
+            if 'adapter probe' == command :
+                equiv = "device-info"
+            elif 'device info' == command :
+                equiv = "core-info"
+            else :
+                raise RuntimeError('command:%s, id:%s'%(command,id))
+            fh = os.popen('nrfutil device %s --serial-number %s'%(equiv,id))
         else :
             raise RuntimeError(genre)
         text = fh.read()
@@ -83,12 +91,22 @@ boardInfos = {}
 def worker(genre,id) :
     boardInfo = get_dict('adapter probe',genre,id)
     if dict != type(boardInfo) : return
-    serialNumber = boardInfo['J-Link Serial']
+    if 'nrf' == genre :
+        label = 'serial_number'
+        boardInfo['Debug Mode'] = 'MCU'
+        boardInfo['Part Number'] = boardInfo.get('boardVersion')
+        boardInfo['VCOM Port'] = 'NA'
+    else :
+        label = 'J-Link Serial'
+    serialNumber = '%d'%(int(boardInfo[label]))
     if 'ip' == genre :
         boardInfo['IP'] = id
     debugMode = boardInfo['Debug Mode']
     if 'MCU' == debugMode or 'TARGET' == debugMode :
         deviceInfo = get_dict('device info',genre,id,retries=3)
+        if 'nrf' == genre :
+            deviceInfo['Part Number'] = boardInfo.get('deviceName')
+            deviceInfo['SRAM Size'] = '%d'%(int(deviceInfo.get('ramSize'))/1024)
         boardInfo['deviceInfo'] = deviceInfo
         partno = deviceInfo.get('Part Number')
         if str != type(partno) or partno.find('917') < 0 :
@@ -102,7 +120,13 @@ def worker(genre,id) :
 
 threads = []
 for serialNumber in get_local() :
-    t = threading.Thread(target=worker,args=('serialnumber',serialNumber))
+    if '44' == serialNumber[:2] :
+        t = threading.Thread(target=worker,args=('serialnumber',serialNumber))
+    elif '68' == serialNumber[:2] or '105' == serialNumber[:3] :
+        t = threading.Thread(target=worker,args=('nrf',serialNumber))
+    else :
+        print("Skipping %s"%(serialNumber))
+        continue
     threads.append(t)
     t.start()
     print('.',end='')
