@@ -3,6 +3,9 @@ import socket
 import time
 import threading
 
+serial_by_addr = {}
+boards_by_addr = {}
+
 #def get_dict(command,sn=None,ip=None,retries=1) :
 def get_dict(command,genre,id,retries=1) :
     for attempt in range(retries) :
@@ -192,6 +195,8 @@ for serialNumber in boardInfos :
                 lineOutput.append('')
         else :
             lineOutput.append('')
+        serial_by_addr[lineOutput[-1]] = serialNumber
+        boards_by_addr[lineOutput[-1]] = boards
     else :
         lineOutput.append(debugMode)
         lineOutput.append('')
@@ -211,3 +216,6 @@ for row in range(len(output)) :
     for col in range(len(output[row])) :
         c += (output[row][col],)
     print(fmt%c)
+
+# print(serial_by_addr)
+# print(boards_by_addr)
